@@ -2,7 +2,7 @@ import logging
 import json
 import threading
 import requests
-from odoo import models, api, tools, _
+from odoo import models, tools, _
 
 _logger = logging.getLogger(__name__)
 
@@ -10,7 +10,6 @@ _logger = logging.getLogger(__name__)
 class MailThread(models.AbstractModel):
     _inherit = "mail.thread"
 
-    @api.returns("mail.message", lambda value: value.id)
     def message_post(self, **kwargs):
         message = super().message_post(**kwargs)
 
