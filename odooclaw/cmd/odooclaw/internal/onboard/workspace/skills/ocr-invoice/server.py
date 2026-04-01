@@ -22,7 +22,9 @@ class OdooOCRSkill:
         self.odoo_url = os.environ.get("ODOO_URL", "").rstrip("/")
         self.odoo_db = os.environ.get("ODOO_DB", "")
         self.odoo_user = os.environ.get("ODOO_USERNAME", "")
-        self.odoo_pwd = os.environ.get("ODOO_PASSWORD", "")
+        self.odoo_pwd = os.environ.get("ODOO_API_KEY") or os.environ.get(
+            "ODOO_PASSWORD", ""
+        )
 
         self.vision_api_base = os.environ.get(
             "VISION_API_BASE", "https://api.openai.com/v1"
@@ -47,7 +49,10 @@ class OdooOCRSkill:
         if not all([self.odoo_url, self.odoo_db, self.odoo_user, self.odoo_pwd]):
             return {
                 "isError": True,
-                "content": "Missing Odoo credentials (ODOO_URL, ODOO_DB, ODOO_USERNAME, ODOO_PASSWORD)",
+                "content": (
+                    "Missing Odoo credentials (ODOO_URL, ODOO_DB, ODOO_USERNAME, "
+                    "ODOO_PASSWORD or ODOO_API_KEY)"
+                ),
             }
 
         self.session = requests.Session()

@@ -2,7 +2,7 @@
 
 # Odoo MCP v1 - Runbook de QA
 
-Este documento define la validación manual e integrada del servidor Odoo MCP contra una instancia real de Odoo 18.
+Este documento define la validación manual e integrada del servidor Odoo MCP contra una instancia real de Odoo 19.
 
 ## Objetivo
 
@@ -48,7 +48,7 @@ No incluye todavía:
 ## Prerrequisitos
 
 ### Instancia Odoo
-- Odoo 18 accesible desde el entorno donde corre el MCP
+- Odoo 19 accesible desde el entorno donde corre el MCP
 
 ### Usuarios
 - `usuario_admin_pruebas`

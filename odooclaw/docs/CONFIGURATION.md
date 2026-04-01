@@ -92,6 +92,7 @@ In your `devel.yaml` or `prod.yaml`, make sure the following environment variabl
 - `ODOO_DB`: The name of the database.
 - `ODOO_USERNAME`: The Odoo user (use an API Key for production).
 - `ODOO_PASSWORD`: The password or API Key.
+- `ODOO_API_KEY`: Preferred alias for Odoo 19+ API-key based authentication.
 
 ## 5. Advanced: Model Routing
 

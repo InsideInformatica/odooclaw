@@ -27,7 +27,9 @@ class WhisperSTT:
         self._odoo_url = os.environ.get("ODOO_URL", "").rstrip("/")
         self._odoo_db = os.environ.get("ODOO_DB", "")
         self._odoo_user = os.environ.get("ODOO_USERNAME", "")
-        self._odoo_pwd = os.environ.get("ODOO_PASSWORD", "")
+        self._odoo_pwd = os.environ.get("ODOO_API_KEY") or os.environ.get(
+            "ODOO_PASSWORD", ""
+        )
         self._session = None
         self._uid = None
 

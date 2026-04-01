@@ -1,7 +1,7 @@
 import logging
-import requests
 import json
 import threading
+import requests
 from odoo import models, api, tools, _
 
 _logger = logging.getLogger(__name__)
@@ -12,7 +12,7 @@ class MailThread(models.AbstractModel):
 
     @api.returns("mail.message", lambda value: value.id)
     def message_post(self, **kwargs):
-        message = super(MailThread, self).message_post(**kwargs)
+        message = super().message_post(**kwargs)
 
         # Determine if OdooClaw is mentioned or it's a direct message to OdooClaw
         odooclaw_user = self.env.ref(
@@ -26,11 +26,14 @@ class MailThread(models.AbstractModel):
             return message
 
         odooclaw_partner_id = odooclaw_user.partner_id.id
-        is_mentioned = odooclaw_partner_id in message.partner_ids.ids
+        recipient_partner_ids = (
+            message.partner_ids.ids if "partner_ids" in message._fields else []
+        )
+        is_mentioned = odooclaw_partner_id in recipient_partner_ids
 
         # If it's a channel, check if it's a DM with OdooClaw
         is_dm = False
-        if message.model == "discuss.channel":
+        if message.model == "discuss.channel" and message.res_id:
             channel = self.env["discuss.channel"].browse(message.res_id)
             if (
                 channel.channel_type == "chat"
@@ -52,9 +55,10 @@ class MailThread(models.AbstractModel):
                 for att in message.attachment_ids:
                     mimetype = (att.mimetype or "").lower()
                     name = (att.name or "").lower()
+                    has_voice_metadata = "voice_ids" in att._fields
 
                     # Check if it's a voice attachment
-                    if att.voice_ids:
+                    if has_voice_metadata and att.voice_ids:
                         voice_attachments.append(
                             {"id": att.id, "name": att.name, "mimetype": att.mimetype}
                         )
@@ -83,7 +87,11 @@ class MailThread(models.AbstractModel):
                 "model": message.model,
                 "res_id": message.res_id,
                 "author_id": message.author_id.id,
-                "author_user_id": message.author_id.user_ids[:1].id or False,
+                "author_user_id": (
+                    message.author_id.user_ids[:1].id
+                    if message.author_id and "user_ids" in message.author_id._fields
+                    else False
+                ),
                 "author_name": message.author_id.name,
                 "body": body_text,
                 "is_dm": is_dm,
@@ -109,17 +117,17 @@ class MailThread(models.AbstractModel):
                     _logger.error("Failed to send webhook to OdooClaw: %s", str(e))
 
             threaded_call = threading.Thread(
-                target=send_webhook, args=(webhook_url, payload)
+                target=send_webhook, args=(webhook_url, payload), daemon=True
             )
             threaded_call.start()
 
             # Trigger "typing..." indicator if it's a discuss channel
-            if message.model == "discuss.channel":
+            if message.model == "discuss.channel" and message.res_id:
                 channel = self.env["discuss.channel"].browse(message.res_id)
                 bot_member = channel.channel_member_ids.filtered(
                     lambda m: m.partner_id.id == odooclaw_partner_id
                 )
-                if bot_member:
+                if bot_member and hasattr(bot_member, "_notify_typing"):
                     bot_member.sudo()._notify_typing(is_typing=True)
 
         return message

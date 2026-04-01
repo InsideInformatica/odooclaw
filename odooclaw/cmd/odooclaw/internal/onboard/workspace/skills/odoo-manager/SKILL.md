@@ -1,6 +1,6 @@
 ---
 name: odoo-manager
-description: Manage Odoo (contacts, any business objects, and metadata) via the official External XML-RPC API. Supports generic CRUD operations on any model using execute_kw, with ready-made flows for res.partner and model introspection. Features dynamic instance and database switching with context-aware URL, database, and credential resolution.
+description: Manage Odoo (contacts, any business objects, and metadata) via Odoo's official external APIs. Supports generic CRUD operations on any model using execute_kw, with ready-made flows for res.partner and model introspection. Features dynamic instance and database switching with context-aware URL, database, and credential resolution.
 homepage: https://www.odoo.com/documentation/
 metadata: {"openclaw":{"emoji":"🏢","requires":{"env":["ODOO_URL","ODOO_DB","ODOO_USERNAME","ODOO_PASSWORD"]},"primaryEnv":"ODOO_PASSWORD"}}
 ---
@@ -158,7 +158,7 @@ Current Odoo Context:
 ## ⚙️ Odoo XML-RPC Basics
 
 Odoo exposes part of its server framework over **XML-RPC** (not REST).
-The External API is documented here: https://www.odoo.com/documentation/18.0/fr/developer/reference/external_api.html
+The External RPC API is documented here: https://www.odoo.com/documentation/19.0/fr/developer/reference/external_rpc_api.html
 
 Two main endpoints:
 
@@ -178,9 +178,9 @@ Example result:
 
 ```json
 {
-  "server_version": "18.0",
-  "server_version_info": [18, 0, 0, "final", 0],
-  "server_serie": "18.0",
+  "server_version": "19.0",
+  "server_version_info": [19, 0, 0, "final", 0],
+  "server_serie": "19.0",
   "protocol_version": 1
 }
 ```
@@ -665,7 +665,7 @@ The skill should:
 
 ## 📚 References & Capabilities Summary
 
-- Official Odoo External API documentation (XML-RPC): https://www.odoo.com/documentation/18.0/fr/developer/reference/external_api.html
+- Official Odoo External RPC API documentation: https://www.odoo.com/documentation/19.0/fr/developer/reference/external_rpc_api.html
 - Requires an Odoo plan with External API access (Custom plans; not available on One App Free / Standard).
 
 **This skill can:**

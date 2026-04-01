@@ -1,6 +1,6 @@
 # Odoo Manager - OpenClaw Skill
 
-Un skill OpenClaw pour interagir avec **Odoo** via son **API externe XML-RPC** :  
+Un skill OpenClaw pour interagir avec **Odoo** via ses **API externes officielles** :
 connexion, sélection d’instance/base, et opérations génériques sur n’importe quel modèle (avec des exemples prêts à l’emploi pour `res.partner`).
 
 ---
@@ -25,8 +25,8 @@ Optionnel :
 ODOO_API_KEY=your_api_key_here
 ```
 
-> L’API externe Odoo est décrite ici :  
-> https://www.odoo.com/documentation/18.0/fr/developer/reference/external_api.html
+> Les APIs externes Odoo sont décrites ici :
+> https://www.odoo.com/documentation/19.0/fr/developer/reference/external_rpc_api.html
 
 ### 2. Mot de Passe vs Clé API
 

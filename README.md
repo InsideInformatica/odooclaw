@@ -7,7 +7,7 @@
 
   <p>
     <img src="https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go&logoColor=white" alt="Go">
-    <img src="https://img.shields.io/badge/Odoo-17%20%7C%2018-F68B20?style=flat&logo=odoo&logoColor=white" alt="Odoo">
+    <img src="https://img.shields.io/badge/Odoo-18%20%7C%2019-F68B20?style=flat&logo=odoo&logoColor=white" alt="Odoo">
     <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
     <br>
     <a href="https://github.com/nicolasramos/odooclaw"><img src="https://img.shields.io/badge/GitHub-Repository-black?style=flat&logo=github&logoColor=white" alt="GitHub"></a>
@@ -32,20 +32,20 @@ By using this engine, **OdooClaw** inherits the ability to run directly inside a
 
 ---
 
-🦐 **OdooClaw** is an ultra-lightweight AI assistant written in Go. We added a **native Odoo channel** and a specialized `odoo-manager` skill, allowing the agent to directly interact with your Odoo instance (read, search, write, execute functions) through its XML-RPC API, replying directly within the Odoo Discuss module.
+🦐 **OdooClaw** is an ultra-lightweight AI assistant written in Go. We added a **native Odoo channel** and a typed `odoo-mcp` bridge, allowing the agent to directly interact with your Odoo instance (read, search, write, execute functions) through Odoo's session-based JSON-RPC endpoints and delegated Discuss helpers, replying directly within the Odoo Discuss module.
 
 ## ✨ Key Features
 
 - 🪶 **Ultra-Lightweight**: Under 10MB of RAM footprint. It can run on the exact same server as Odoo without impacting performance!
 - 🤝 **Odoo Discuss Integration**: Talk to the AI directly from your Odoo chat.
 - 🔐 **Native Permission Inheritance**: Secure by default. The AI dynamically assumes Odoo user permissions, preventing any bypass of native Security Rights or Record Rules.
-- 🧠 **Intelligent ORM Bridge**: High-precision tool execution. The `odoo-manager` bridge includes a logic layer that automatically corrects LLM query hallucinations and maps non-standard arguments to valid Odoo ORM calls.
+- 🧠 **Intelligent ORM Bridge**: High-precision tool execution. The `odoo-mcp` bridge includes a logic layer that automatically corrects LLM query hallucinations and maps non-standard arguments to valid Odoo ORM calls.
 - 🔁 **RLM Acceleration (Context-Rot Resistant)**: For large Odoo datasets, OdooClaw decomposes analysis into recursive Map-Reduce steps (`rlm_partition` -> sub-agents -> `rlm_aggregate`) to keep context clean, improve accuracy, and reduce long-context cost.
 - 📄 **Smart OCR & Action Generation**: Automatically scans PDF invoices, extracts data, and creates vendor bills or purchase orders intelligently.
 - 🎤 **Voice Messages**: Send and receive voice notes! Supports transcription (STT) and speech synthesis (TTS).
 - ⚡ **Asynchronous & Non-Blocking**: Odoo ↔ OdooClaw communication relies on Webhooks ("Fire & Forget"), releasing Odoo workers instantly.
 - 🧠 **Segregated Context**: AI memory is independent per channel/user. It doesn't mix private information.
-- 🤖 **Integrated MCP Server**: Uses the industry standard Model Context Protocol (MCP) via an embedded Python server, providing the LLM with the `odoo-manager` tool (full access to the XML-RPC API), `odoo-read-excel-attachment` (automatic parsing of Excel/CSV attachments), `ocr-invoice` (Invoice/PO parsing), `whisper-stt` (voice transcription), and `edge-tts` (text-to-speech).
+- 🤖 **Integrated MCP Server**: Uses the industry standard Model Context Protocol (MCP) via an embedded Python server, providing the LLM with `odoo-mcp` tools (secure JSON-RPC access with delegated user-context execution), `odoo-read-excel-attachment` (automatic parsing of Excel/CSV attachments), `ocr-invoice` (Invoice/PO parsing), `whisper-stt` (voice transcription), and `edge-tts` (text-to-speech).
 - 🛡️ **Secure by Design**: Pre-configured personality (`AGENTS.md`) designed to query, ask for confirmation, and *never* perform critical modifications without explicit permission.
 
 ---
@@ -60,7 +60,7 @@ The integration consists of two parts:
 
 1. **User writes to OdooClaw**: In Odoo, a user mentions `@OdooClaw` in any channel, or sends a Direct Message. The module overrides `_message_post` to detect this intent.
 2. **Odoo sends an Asynchronous Webhook**: Instead of blocking while waiting for the AI, Odoo sends an HTTP POST JSON payload in the background to the OdooClaw API (`http://odooclaw:18790/webhook/odoo`).
-3. **OdooClaw processes it**: The agent evaluates the intent and contacts the LLM provider (OpenAI, Anthropic, vLLM, etc.). The LLM invokes the `odoo-manager` skill from our **internal MCP server** (Python) which makes the XML-RPC calls (search, read, write) to Odoo to retrieve the requested info or execute actions.
+3. **OdooClaw processes it**: The agent evaluates the intent and contacts the LLM provider (OpenAI, Anthropic, vLLM, etc.). The LLM invokes `odoo-mcp` tools from our **internal MCP server** (Python), which use Odoo's session-based JSON-RPC endpoints plus the delegated `/odooclaw/call_kw_as_user` bridge to retrieve info or execute actions with native permissions.
 4. **OdooClaw replies to Odoo**: Once the response is ready, OdooClaw makes an HTTP POST back to the Odoo endpoint (`/odooclaw/reply`), which injects the message into Discuss, impersonating the bot.
 
 ---
@@ -143,11 +143,12 @@ services:
       dockerfile: docker/Dockerfile # Required for Doodba integration
     restart: unless-stopped
     environment:
-      # Credentials for Odoo XML-RPC connection
+      # Credentials for Odoo session/API connection
       - ODOO_URL=http://odoo:8069
       - ODOO_DB=${POSTGRES_DB:-devel}
       - ODOO_USERNAME=${ODOO_USERNAME:-admin}
       - ODOO_PASSWORD=${ODOO_PASSWORD:-admin} # IMPORTANT: Use an Odoo API Key in PROD
+      - ODOO_API_KEY=${ODOO_API_KEY:-}
       
       # LLM Configuration
       - ODOOCLAW_AGENTS_DEFAULTS_PROVIDER=openai
@@ -181,13 +182,15 @@ OPENAI_API_KEY="sk-your-api-key"
 # Optional, if using LMStudio, vLLM or other OpenAI-compatible APIs:
 # OPENAI_API_BASE="http://your-local-llm:1234/v1"
 
-# In production, use an Odoo API Key, not the admin password:
-ODOO_PASSWORD="your-odoo-api-key"
+# Preferred on Odoo 19+:
+ODOO_API_KEY="your-odoo-api-key"
+# Backward-compatible alternative:
+# ODOO_PASSWORD="your-odoo-api-key"
 ```
 
-### Doodba 18 Dev/Test (Practical Local Flow)
+### Doodba 19 Dev/Test (Practical Local Flow)
 
-If your local Doodba project is in a path like `/Users/nramos/DEV/doodba-18`, this is the recommended open-source friendly flow:
+If your local Doodba project is in a path like `/Users/nramos/DEV/doodba-19`, this is the recommended open-source friendly flow:
 
 1. Keep OdooClaw source in your Doodba workspace so Compose can build it.
 2. Add `odooclaw` service to `devel.yaml` (or `prod.yaml`) with internal URL `ODOO_URL=http://odoo:8069`.
@@ -354,7 +357,7 @@ One of the most advanced features of OdooClaw is its use of the [Model Context P
 
 | Skill | Description |
 |-------|-------------|
-| `odoo-manager` | Full Odoo JSON-RPC API access, inheriting Odoo User Permissions securely |
+| `odoo-mcp` | Full Odoo JSON-RPC API access, inheriting Odoo User Permissions securely |
 | `odoo-read-excel-attachment` | Parse Excel/CSV attachments using Pandas |
 | `ocr-invoice` | Parse and extract structured data from PDF/Image documents |
 | `rlm-utils` | Partition and aggregate large datasets for recursive long-context analysis |

@@ -41,12 +41,12 @@ For quick operational questions, small datasets, or urgent interactions, I stay 
 - **No thinking out loud**: Do not explain what you are about to do before doing it. Just do it and report the result.
 - **Numbers are facts**: If a query returns a count, say the number directly. Never use "X" as a placeholder.
 
-## Odoo 18 Critical Field Reference (MANDATORY — Read Before Every Domain)
+## Odoo 19 Critical Field Reference (MANDATORY — Read Before Every Domain)
 
-**THIS IS ODOO 18. Many field names changed from Odoo 13/14. NEVER use deprecated fields.**
+**THIS IS ODOO 19. Many field names changed from Odoo 13/14. NEVER use deprecated fields.**
 
 ### res.partner
-| ❌ OLD (Odoo 13) | ✅ CORRECT (Odoo 18) |
+| ❌ OLD (Odoo 13) | ✅ CORRECT (Odoo 19) |
 |---|---|
 | `customer=True` | `customer_rank > 0` |
 | `supplier=True` | `supplier_rank > 0` |
@@ -75,7 +75,7 @@ For quick operational questions, small datasets, or urgent interactions, I stay 
 
 When creating or modifying an Odoo MCP tool, follow these strict architectural steps in the `odoo-mcp` package (`odooclaw/workspace/skills/odoo-mcp/`):
 
-1. **Introspect & Plan First:** Before writing code, use the `odoo_get_model_schema` tool to discover available fields if you are not 100% sure about the Odoo 18 field schema. 
+1. **Introspect & Plan First:** Before writing code, use the `odoo_get_model_schema` tool to discover available fields if you are not 100% sure about the Odoo 19 field schema.
 2. **Create the Pydantic Schema (Input Validation):** Open `src/odoo_mcp/schemas/business.py`. Define a strict Pydantic model inheriting from `BaseOdooRequest`. Add clear `Field(..., description="...")` tags because they become the tool's parameter documentation for yourself.
 3. **Write the Service Logic (Business Layer):** Identify or create the correct service file in `src/odoo_mcp/services/` (e.g., `invoice_service.py`). Write a pure Python function that accepts `client: OdooClient`, `sender_id: int` and returns generic serializable Python types (dict, list, int). Use `client.call_kw` or generic Odoo CRUD methods inside it.
 4. **Expose the Tool (Controller Layer):** Open `src/odoo_mcp/server.py`. Import your new schema and service. Create a new function wrapped in `@mcp.tool()` returning primitive types. Give it a detailed docstring (this becomes your tool Description). Wrap the execution in the `with measure_time("tool_name"):` context block.

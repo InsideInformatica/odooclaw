@@ -1,4 +1,4 @@
-from odoo import http, SUPERUSER_ID
+from odoo import http
 from odoo.http import request
 import json
 from markupsafe import Markup
@@ -21,16 +21,21 @@ class OdooClawController(http.Controller):
             "res_id": 123,
             "message": "Hello!",  // optional if attachment_ids provided
             "attachment_ids": [456, 457],  // optional - voice attachment IDs
-            "voice_metadata_ids": [789]  // optional - voice metadata IDs
+            "voice_metadata_ids": [789]  // optional - Discuss voice metadata IDs
         }
         """
         try:
-            payload = json.loads(request.httprequest.data)
+            payload = request.httprequest.get_json(silent=True)
+            if payload is None:
+                payload = json.loads(request.httprequest.data or b"{}")
+
             model_name = payload.get("model")
             res_id = payload.get("res_id")
             message_body = payload.get("message", "")
             attachment_ids = payload.get("attachment_ids", [])
-            voice_metadata_ids = payload.get("voice_metadata_ids", [])
+            voice_metadata_ids = (
+                payload.get("voice_metadata_ids") or payload.get("voice_ids") or []
+            )
 
             if not model_name or not res_id:
                 return request.make_json_response(
@@ -53,7 +58,7 @@ class OdooClawController(http.Controller):
                     {"status": "error", "reason": "OdooClaw bot user not found"}
                 )
 
-            message_html = markdown_to_safe_html(message_body)
+            message_html = markdown_to_safe_html(message_body) if message_body else ""
 
             # Prepare message_post values
             post_values = {
@@ -66,13 +71,20 @@ class OdooClawController(http.Controller):
             if attachment_ids:
                 post_values["attachment_ids"] = [(6, 0, attachment_ids)]
 
-            # Add voice metadata if provided (links attachments to voice player)
-            if voice_metadata_ids:
+            # Add voice metadata if provided (links attachments to voice player).
+            if voice_metadata_ids and "voice_ids" in request.env["mail.message"]._fields:
                 post_values["voice_ids"] = [(6, 0, voice_metadata_ids)]
 
             # Perform action as the bot user to circumvent public access rights
             record = request.env[model_name].sudo().browse(res_id)
             if record.exists():
+                if not hasattr(record, "message_post"):
+                    return request.make_json_response(
+                        {
+                            "status": "error",
+                            "reason": f"Model {model_name} does not support message_post",
+                        }
+                    )
                 record.with_user(bot_user).message_post(**post_values)
 
                 # Clear typing indicator after replying
@@ -80,7 +92,7 @@ class OdooClawController(http.Controller):
                     bot_member = record.channel_member_ids.filtered(
                         lambda m: m.partner_id.id == bot_user.partner_id.id
                     )
-                    if bot_member:
+                    if bot_member and hasattr(bot_member, "_notify_typing"):
                         bot_member.sudo()._notify_typing(is_typing=False)
 
                 return request.make_json_response({"status": "ok"})

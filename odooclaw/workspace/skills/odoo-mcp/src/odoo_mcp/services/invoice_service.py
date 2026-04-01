@@ -28,11 +28,11 @@ def create_vendor_invoice(client: OdooClient, user_id: int, partner_id: int, lin
 def find_pending_invoices(client: OdooClient, user_id: int, partner_id: int = None,
                           move_type: str = "out_invoice", limit: int = 50) -> list:
     """
-    Find invoices pending payment in Odoo 18.
+    Find invoices pending payment in Odoo 19.
 
-    IMPORTANT - Odoo 18 account.move states (NOT Odoo 13):
+    IMPORTANT - Odoo 19 account.move states (NOT Odoo 13):
       state field: 'draft' | 'posted' | 'cancel'
-        - 'open' is NOT valid in Odoo 18 (was valid up to Odoo 13)
+        - 'open' is NOT valid in Odoo 19 (was valid up to Odoo 13)
         - posted = confirmed/validated invoice
       payment_state field: 'not_paid' | 'partial' | 'in_payment' | 'paid' | 'reversed'
         - not_paid = no payment made

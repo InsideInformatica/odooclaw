@@ -1,6 +1,6 @@
 # Odoo MCP Server
 
-Un Servidor MCP modular, tipado y seguro para interactuar con el ORM de Odoo 18, diseñado bajo los principios de Desarrollo Guiado por Pruebas (TDD) y Delegación de Permisos Nativos.
+Un Servidor MCP modular, tipado y seguro para interactuar con el ORM de Odoo 19, diseñado bajo los principios de Desarrollo Guiado por Pruebas (TDD) y Delegación de Permisos Nativos.
 
 ## Overview
 Reemplaza el antiguo y monolítico `odoo-manager` proporcionando tools granulares (búsqueda, lectura, escritura con denylist estricta, acciones seguras).
@@ -14,4 +14,4 @@ Las operaciones Odoo se ejecutan bajo el contexto de seguridad nativo del identi
 
 ## Configuration
 Requires environment variables:
-`ODOO_URL`, `ODOO_DB`, `ODOO_USERNAME`, `ODOO_PASSWORD`
+`ODOO_URL`, `ODOO_DB`, `ODOO_USERNAME`, `ODOO_PASSWORD` u `ODOO_API_KEY`

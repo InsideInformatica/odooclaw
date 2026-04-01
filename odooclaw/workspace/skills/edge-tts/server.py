@@ -58,7 +58,9 @@ class EdgeTTSManager:
         self._odoo_url = os.environ.get("ODOO_URL", "").rstrip("/")
         self._odoo_db = os.environ.get("ODOO_DB", "")
         self._odoo_user = os.environ.get("ODOO_USERNAME", "")
-        self._odoo_pwd = os.environ.get("ODOO_PASSWORD", "")
+        self._odoo_pwd = os.environ.get("ODOO_API_KEY") or os.environ.get(
+            "ODOO_PASSWORD", ""
+        )
         self._session = None
         self._uid = None
 
@@ -216,7 +218,10 @@ class EdgeTTSManager:
         if not all([self._odoo_url, self._odoo_db, self._odoo_user, self._odoo_pwd]):
             return {
                 "isError": True,
-                "content": "Missing Odoo credentials (ODOO_URL, ODOO_DB, ODOO_USERNAME, ODOO_PASSWORD)",
+                "content": (
+                    "Missing Odoo credentials (ODOO_URL, ODOO_DB, ODOO_USERNAME, "
+                    "ODOO_PASSWORD or ODOO_API_KEY)"
+                ),
             }
 
         try:
@@ -319,7 +324,16 @@ def handle_request(request: dict) -> dict | None:
                             "success": True,
                             "attachment_id": res.get("attachment_id"),
                             "voice_metadata_id": res.get("metadata_id"),
-                            "message": "Audio generated successfully. Use odoo-manager to post to Odoo with attachment_ids and voice_ids.",
+                            "message": (
+                                "Audio generated successfully. Use "
+                                "/odooclaw/reply with attachment_ids and "
+                                "voice_metadata_ids, or direct message_post with voice_ids."
+                            ),
+                            "odooclaw_reply": {
+                                "message": "🎤 Nota de voz",
+                                "attachment_ids": [res.get("attachment_id")],
+                                "voice_metadata_ids": [res.get("metadata_id")],
+                            },
                             "odoo_message_post": {
                                 "body": "🎤 Nota de voz",
                                 "attachment_ids": [res.get("attachment_id")],

@@ -1,4 +1,4 @@
-# Browser Copilot + Doodba 18 Setup
+# Browser Copilot + Doodba 19 Setup
 
 This guide explains how to run the Browser Copilot MVP together with your Doodba dev/test environment.
 
@@ -15,13 +15,13 @@ This guide explains how to run the Browser Copilot MVP together with your Doodba
 Example local path:
 
 ```text
-/Users/nramos/DEV/doodba-18
+/Users/nramos/DEV/doodba-19
 ```
 
 Expected structure:
 
 ```text
-doodba-18/
+doodba-19/
   devel.yaml
   common.yaml
   .docker/odoo.env

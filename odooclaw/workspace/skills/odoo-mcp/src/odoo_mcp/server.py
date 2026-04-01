@@ -85,10 +85,13 @@ def get_odoo_client() -> OdooClient:
     url = os.environ.get("ODOO_URL")
     db = os.environ.get("ODOO_DB")
     user = os.environ.get("ODOO_USERNAME")
-    pwd = os.environ.get("ODOO_PASSWORD")
+    pwd = os.environ.get("ODOO_API_KEY") or os.environ.get("ODOO_PASSWORD")
 
     if not all([url, db, user, pwd]):
-        _logger.error("Missing mandatory Odoo environment variables.")
+        _logger.error(
+            "Missing mandatory Odoo environment variables "
+            "(ODOO_URL, ODOO_DB, ODOO_USERNAME, ODOO_PASSWORD or ODOO_API_KEY)."
+        )
         sys.exit(1)
 
     session = OdooSession(url, db, user, pwd)
@@ -97,34 +100,33 @@ def get_odoo_client() -> OdooClient:
 
 
 # Resources (Capa 6)
-@mcp.resource("odoo://context/odoo18-fields-reference")
-def get_odoo18_fields_reference() -> str:
+def _get_odoo19_fields_reference() -> str:
     """
-    CRITICAL REFERENCE: Odoo 18 field name changes from older versions.
+    CRITICAL REFERENCE: Odoo 19 field conventions inherited from recent Odoo versions.
     The LLM MUST consult this before building domains for res.partner or account.move.
     """
-    return """# Odoo 18 Field Reference — BREAKING CHANGES vs Odoo 13/14
+    return """# Odoo 19 Field Reference — BREAKING CHANGES vs Odoo 13/14
 
 ## res.partner (Customers / Vendors)
-| Odoo 13 (OLD - DO NOT USE) | Odoo 18 (CORRECT) | Notes |
+| Odoo 13 (OLD - DO NOT USE) | Odoo 19 (CORRECT) | Notes |
 |---|---|---|
 | customer=True | customer_rank > 0 | customer_rank is integer >= 0 |
 | supplier=True | supplier_rank > 0 | supplier_rank is integer >= 0 |
-| is_customer=True | customer_rank > 0 | field does not exist in Odoo 18 |
+| is_customer=True | customer_rank > 0 | field does not exist in Odoo 19 |
 
-### Correct domains for res.partner in Odoo 18:
+### Correct domains for res.partner in Odoo 19:
 - All customers: [["customer_rank", ">", 0]]
 - All vendors: [["supplier_rank", ">", 0]]
 - Active customers: [["customer_rank", ">", 0], ["active", "=", True]]
 - Count records: use odoo_search with limit=0, result length = count
 
 ## account.move (Invoices / Vendor Bills)
-| Odoo 13 (OLD - DO NOT USE) | Odoo 18 (CORRECT) | Notes |
+| Odoo 13 (OLD - DO NOT USE) | Odoo 19 (CORRECT) | Notes |
 |---|---|---|
 | state=open | state=posted + payment_state=not_paid | 'open' state does NOT exist |
 | state=paid | state=posted + payment_state=paid | |
 
-### account.move state field values in Odoo 18:
+### account.move state field values in Odoo 19:
 - 'draft': unconfirmed/quotation
 - 'posted': confirmed/validated (replaces 'open')
 - 'cancel': cancelled
@@ -152,6 +154,17 @@ def get_odoo18_fields_reference() -> str:
 - stage_id: references project.task.type
 - Use odoo_find_task tool for task searches
 """
+
+
+@mcp.resource("odoo://context/odoo19-fields-reference")
+def get_odoo19_fields_reference() -> str:
+    return _get_odoo19_fields_reference()
+
+
+@mcp.resource("odoo://context/odoo18-fields-reference")
+def get_odoo18_fields_reference() -> str:
+    # Backward-compatible alias kept for prompts or tooling that still reference Odoo 18.
+    return _get_odoo19_fields_reference()
 
 
 @mcp.resource("odoo://models")
@@ -437,8 +450,8 @@ if __name__ == "__main__":
 def odoo_find_pending_invoices(payload: FindPendingInvoicesSchema) -> list:
     """
     Find invoices/bills pending payment for a partner.
-    Uses correct Odoo 18 domains: state='posted' AND payment_state in ('not_paid','partial').
-    DO NOT use state='open' - that is Odoo 13 and does NOT exist in Odoo 18.
+    Uses correct Odoo 19 domains: state='posted' AND payment_state in ('not_paid','partial').
+    DO NOT use state='open' - that is Odoo 13 and does NOT exist in Odoo 19.
     Omit partner_id to get ALL pending invoices.
     """
     with measure_time("odoo_find_pending_invoices"):

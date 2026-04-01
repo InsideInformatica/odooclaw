@@ -69,6 +69,7 @@ odooclaw:
     - ODOO_DB=devel
     - ODOO_USERNAME=admin
     - ODOO_PASSWORD=${ODOO_PASSWORD:-admin}
+    - ODOO_API_KEY=${ODOO_API_KEY:-}
     - ODOOCLAW_AGENTS_DEFAULTS_PROVIDER=openai
     - ODOOCLAW_AGENTS_DEFAULTS_MODEL=gpt4
     - ODOOCLAW_PROVIDERS_OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -96,7 +97,9 @@ Important notes:
 Manage secrets in `.docker/odoo.env` (or your central `.env`):
 
 ```env
-ODOO_PASSWORD=your_odoo_api_key
+ODOO_API_KEY=your_odoo_api_key
+# Backward-compatible alternative:
+# ODOO_PASSWORD=your_odoo_api_key
 OPENAI_API_KEY=sk-xxxx
 OPENAI_API_BASE=https://api.openai.com/v1
 TZ=Europe/Madrid
@@ -248,7 +251,7 @@ docker compose logs --since=5m odooclaw
 
 ### No response in Discuss
 - Validate `odooclaw.webhook_url`
-- Validate `ODOO_URL`, `ODOO_DB`, `ODOO_USERNAME`, `ODOO_PASSWORD`
+- Validate `ODOO_URL`, `ODOO_DB`, `ODOO_USERNAME`, and `ODOO_PASSWORD` or `ODOO_API_KEY`
 - Check `docker compose logs odooclaw`
 
 ### Model/API error

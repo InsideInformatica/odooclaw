@@ -138,6 +138,7 @@ services:
       - ODOO_DB=${POSTGRES_DB:-devel}
       - ODOO_USERNAME=${ODOO_USERNAME:-admin}
       - ODOO_PASSWORD=${ODOO_PASSWORD:-admin}
+      - ODOO_API_KEY=${ODOO_API_KEY:-}
       
       # LLM Configuration
       - ODOOCLAW_AGENTS_DEFAULTS_PROVIDER=openai
@@ -240,7 +241,7 @@ The AI agent automatically:
 
 **Voice not playing in Odoo**
 - Ensure `voice_ids` is included in message_post
-- Check Odoo Discuss supports voice messages (Odoo 18+)
+- Check Odoo Discuss supports voice messages (Odoo 19+)
 
 ---
 

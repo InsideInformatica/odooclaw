@@ -115,6 +115,7 @@ services:
       - ODOO_DB=${POSTGRES_DB:-devel}
       - ODOO_USERNAME=${ODOO_USERNAME:-admin}
       - ODOO_PASSWORD=${ODOO_PASSWORD:-admin}
+      - ODOO_API_KEY=${ODOO_API_KEY:-}
       
       # LLM Configuration
       - ODOOCLAW_AGENTS_DEFAULTS_PROVIDER=openai
@@ -163,7 +164,9 @@ OPENAI_API_KEY="your_openai_api_key"
 OPENAI_API_BASE="https://api.openai.com/v1"
 
 # Odoo Connection
-ODOO_PASSWORD="your_odoo_api_key"
+ODOO_API_KEY="your_odoo_api_key"
+# Backward-compatible alternative:
+# ODOO_PASSWORD="your_odoo_api_key"
 ```
 
 Docker Compose will automatically load these variables, allowing references like `${OPENAI_API_KEY}` in your YAML file to work correctly.

@@ -6,14 +6,13 @@ class ResUsers(models.Model):
 
     def _compute_im_status(self):
         """
-        Override to set im_status to 'online' for the OdooClaw bot.
-        Useful for Live chat.
+        Override to expose the OdooClaw user as a bot in Discuss.
         """
         odooclaw_user = self.env.ref(
             "mail_bot_odooclaw.odooclaw_bot", raise_if_not_found=False
         )
         if odooclaw_user and odooclaw_user in self:
-            odooclaw_user.im_status = "online"
+            odooclaw_user.im_status = "bot"
 
         to_process = self.filtered(lambda r: not odooclaw_user or r != odooclaw_user)
         if not to_process:
