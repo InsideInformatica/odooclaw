@@ -5,6 +5,8 @@ from markupsafe import Markup
 
 from ..utils.markdown_html import markdown_to_safe_html
 
+_REPORT_EXPIRY_DAYS = 7
+
 
 class OdooClawController(http.Controller):
     @http.route(
@@ -195,3 +197,97 @@ class OdooClawController(http.Controller):
 
         except Exception as e:
             return request.make_json_response({"status": "error", "reason": str(e)})
+
+    # ------------------------------------------------------------------
+    # Visual Reports
+    # ------------------------------------------------------------------
+
+    @http.route(
+        "/odooclaw/save_report",
+        type="http",
+        auth="public",
+        methods=["POST"],
+        csrf=False,
+    )
+    def odooclaw_save_report(self, **kwargs):
+        """
+        Called by the OdooClaw Go backend to persist an HTML report.
+
+        Expected payload:
+        {
+            "title": "Sales Report – March 2026",
+            "html_content": "<!DOCTYPE html>...",
+            "res_id": 42,           // optional
+            "model": "discuss.channel"  // optional
+        }
+
+        Returns:
+        { "url": "/odooclaw/report/<token>" }
+        """
+        try:
+            payload = request.httprequest.get_json(silent=True)
+            if payload is None:
+                payload = json.loads(request.httprequest.data or b"{}")
+
+            title = payload.get("title", "").strip()
+            html_content = payload.get("html_content", "").strip()
+
+            if not title or not html_content:
+                return request.make_json_response(
+                    {"error": "title and html_content are required"}, status=400
+                )
+
+            vals = {
+                "name": title,
+                "html_content": html_content,
+            }
+            if payload.get("res_id"):
+                try:
+                    vals["res_id"] = int(payload["res_id"])
+                except (ValueError, TypeError):
+                    pass
+            if payload.get("model"):
+                vals["res_model"] = str(payload["model"])
+
+            report = request.env["odooclaw.report"].sudo().create(vals)
+            return request.make_json_response(
+                {"url": f"/odooclaw/report/{report.token}"}
+            )
+
+        except Exception as e:
+            return request.make_json_response({"error": str(e)}, status=500)
+
+    @http.route(
+        "/odooclaw/report/<string:token>",
+        type="http",
+        auth="user",
+        methods=["GET"],
+        csrf=False,
+        website=False,
+    )
+    def odooclaw_view_report(self, token, **kwargs):
+        """
+        Serves a stored HTML report. Requires an active Odoo session (auth='user').
+        """
+        report = (
+            request.env["odooclaw.report"]
+            .sudo()
+            .search([("token", "=", token)], limit=1)
+        )
+
+        if not report:
+            return request.make_response(
+                "<h1>404 – Report not found or expired</h1>",
+                headers=[("Content-Type", "text/html; charset=utf-8")],
+                status=404,
+            )
+
+        # Serve the HTML exactly as stored – it is self-contained.
+        return request.make_response(
+            report.html_content,
+            headers=[
+                ("Content-Type", "text/html; charset=utf-8"),
+                ("X-Frame-Options", "SAMEORIGIN"),
+                ("Cache-Control", "no-store"),
+            ],
+        )

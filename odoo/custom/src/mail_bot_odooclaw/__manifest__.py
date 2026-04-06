@@ -7,7 +7,9 @@
     "license": "AGPL-3",
     "depends": ["mail"],
     "data": [
+        "security/ir.model.access.csv",
         "data/odooclaw_bot_data.xml",
+        "data/odooclaw_report_cron.xml",
     ],
     "installable": True,
     "application": False,

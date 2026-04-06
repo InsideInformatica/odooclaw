@@ -172,6 +172,12 @@ func registerSharedTools(
 			return registry.CanSpawnSubagent(currentAgentID, targetAgentID)
 		})
 		agent.Tools.Register(spawnTool)
+
+		// Odoo visual report tool – publishes HTML reports to the Odoo server.
+		// Only meaningful when ODOO_URL is configured, but always registered so
+		// the LLM can see the tool in all environments (it fails gracefully if
+		// ODOO_URL is missing).
+		agent.Tools.Register(tools.NewOdooReportTool())
 	}
 }
 
