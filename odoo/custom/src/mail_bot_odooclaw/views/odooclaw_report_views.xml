@@ -46,18 +46,13 @@
         <field name="context">{"create": False}</field>
     </record>
 
-    <!-- Menu -->
-    <menuitem
-        id="odooclaw_menu_root"
-        name="OdooClaw"
-        sequence="90"
-    />
+    <!-- Menu bajo Ajustes → Técnico -->
     <menuitem
         id="odooclaw_menu_reports"
-        name="Reportes"
-        parent="odooclaw_menu_root"
+        name="Reportes OdooClaw"
+        parent="base.menu_technical"
         action="odooclaw_report_action"
-        sequence="10"
+        sequence="100"
     />
 
 </odoo>
