@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- List View -->
+    <record id="odooclaw_report_view_list" model="ir.ui.view">
+        <field name="name">odooclaw.report.list</field>
+        <field name="model">odooclaw.report</field>
+        <field name="arch" type="xml">
+            <list string="OdooClaw Reports" default_order="create_date desc">
+                <field name="name"/>
+                <field name="res_model" optional="show"/>
+                <field name="res_id" optional="hide"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="odooclaw_report_view_form" model="ir.ui.view">
+        <field name="name">odooclaw.report.form</field>
+        <field name="model">odooclaw.report</field>
+        <field name="arch" type="xml">
+            <form string="OdooClaw Report" create="false" edit="false">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <field name="create_date" string="Generado el"/>
+                        <field name="res_model" string="Modelo relacionado"/>
+                        <field name="res_id" string="ID registro"/>
+                        <field name="token" string="Token"/>
+                    </group>
+                    <separator string="Contenido HTML"/>
+                    <field name="html_content" widget="html" readonly="1"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="odooclaw_report_action" model="ir.actions.act_window">
+        <field name="name">Reportes OdooClaw</field>
+        <field name="res_model">odooclaw.report</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{"create": False}</field>
+    </record>
+
+    <!-- Menu -->
+    <menuitem
+        id="odooclaw_menu_root"
+        name="OdooClaw"
+        sequence="90"
+    />
+    <menuitem
+        id="odooclaw_menu_reports"
+        name="Reportes"
+        parent="odooclaw_menu_root"
+        action="odooclaw_report_action"
+        sequence="10"
+    />
+
+</odoo>

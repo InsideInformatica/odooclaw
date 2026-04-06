@@ -10,6 +10,7 @@
         "security/ir.model.access.csv",
         "data/odooclaw_bot_data.xml",
         "data/odooclaw_report_cron.xml",
+        "views/odooclaw_report_views.xml",
     ],
     "installable": True,
     "application": False,
