@@ -43,6 +43,7 @@ By using this engine, **OdooClaw** inherits the ability to run directly inside a
 - 🔁 **RLM Acceleration (Context-Rot Resistant)**: For large Odoo datasets, OdooClaw decomposes analysis into recursive Map-Reduce steps (`rlm_partition` -> sub-agents -> `rlm_aggregate`) to keep context clean, improve accuracy, and reduce long-context cost.
 - 📄 **Smart OCR & Action Generation**: Automatically scans PDF invoices, extracts data, and creates vendor bills or purchase orders intelligently.
 - 🎤 **Voice Messages**: Send and receive voice notes! Supports transcription (STT) and speech synthesis (TTS).
+- 📊 **Visual Reports**: Ask for any report and get back a styled, interactive HTML page (with charts, KPI cards, and tables) served on the Odoo server and opened in a new browser tab — no more plain-text walls in chat.
 - ⚡ **Asynchronous & Non-Blocking**: Odoo ↔ OdooClaw communication relies on Webhooks ("Fire & Forget"), releasing Odoo workers instantly.
 - 🧠 **Segregated Context**: AI memory is independent per channel/user. It doesn't mix private information.
 - 🤖 **Integrated MCP Server**: Uses the industry standard Model Context Protocol (MCP) via an embedded Python server, providing the LLM with `odoo-mcp` tools (secure JSON-RPC access with delegated user-context execution), `odoo-read-excel-attachment` (automatic parsing of Excel/CSV attachments), `ocr-invoice` (Invoice/PO parsing), `whisper-stt` (voice transcription), and `edge-tts` (text-to-speech).
@@ -104,6 +105,40 @@ When the user asks for voice output (e.g., "read this aloud", "voice response"):
 ```
 
 See [Voice Features Documentation](odooclaw/docs/VOICE_FEATURES.md) for detailed configuration.
+
+---
+
+## 📊 Visual Reports
+
+Instead of returning walls of Markdown tables in the chat, OdooClaw can publish **self-contained HTML reports** to the Odoo server and send the user a clickable link that opens the report in a new tab.
+
+### How it works
+
+1. The user asks for a report (e.g. _"Show me sales for Q1"_).
+2. OdooClaw fetches the data via `odoo-mcp`, then calls the built-in `create_visual_report` tool.
+3. The tool POSTs a fully self-contained HTML document to the Odoo endpoint `POST /odooclaw/save_report`.
+4. Odoo stores it in the `odooclaw.report` model and returns a unique token URL.
+5. OdooClaw posts the link in chat: **[Ver Reporte: Sales Q1 2026](/odooclaw/report/\<token\>)**.
+6. The user clicks the link — Odoo checks the session (login required) and renders the page directly.
+
+### Report design
+
+The LLM generates the HTML freely, choosing the best visualization approach for the data:
+- KPI summary cards for totals and key metrics
+- Responsive tables for tabular data
+- Charts via [Chart.js CDN](https://www.chartjs.org/) for trends and comparisons
+- Embedded CSS — no external stylesheets, no authentication required to load assets
+
+### Expiration
+
+Reports are automatically deleted after **7 days** by a scheduled Odoo cron job. Only authenticated Odoo users can view them.
+
+### Endpoints added to the Odoo module
+
+| Endpoint | Auth | Description |
+|---|---|---|
+| `POST /odooclaw/save_report` | public | Called by the Go backend to persist a report. Returns `{ "url": "..." }`. |
+| `GET /odooclaw/report/<token>` | user (session) | Serves the HTML report. Redirects to login if not authenticated. |
 
 ---
 
@@ -355,12 +390,13 @@ One of the most advanced features of OdooClaw is its use of the [Model Context P
 
 ### Core Skills
 
-| Skill | Description |
+| Skill / Tool | Description |
 |-------|-------------|
 | `odoo-mcp` | Full Odoo JSON-RPC API access, inheriting Odoo User Permissions securely |
 | `odoo-read-excel-attachment` | Parse Excel/CSV attachments using Pandas |
 | `ocr-invoice` | Parse and extract structured data from PDF/Image documents |
 | `rlm-utils` | Partition and aggregate large datasets for recursive long-context analysis |
+| `create_visual_report` | Publish a self-contained HTML report to Odoo and get back a shareable URL (built-in Go tool) |
 
 ### Voice Skills
 
